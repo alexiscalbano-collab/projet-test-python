@@ -19,9 +19,6 @@ class Thermique(Motorisation):
     def consommation_thermique(self):
         return self._consommation_thermique
 
-    def get_type(self):
-        return self.type_motorisation
-
     def afficher(self):
         return f"thermique, reservoir {self.reservoir} L, conso {self.consommation_thermique} L/100km"
 
@@ -43,9 +40,6 @@ class Electrique(Motorisation):
     @property
     def consommation_electrique(self):
         return self._consommation_electrique
-
-    def get_type(self):
-        return self.type_motorisation
 
     def afficher(self):
         return f"electrique, batterie {self.batterie} kWh, conso {self.consommation_electrique} kWh/100km"
@@ -78,9 +72,6 @@ class Hybride(Motorisation):
     @property
     def consommation_electrique(self):
         return self._consommation_electrique
-
-    def get_type(self):
-        return self.type_motorisation
 
     def afficher(self):
         return (

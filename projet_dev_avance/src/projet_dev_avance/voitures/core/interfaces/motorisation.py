@@ -4,8 +4,9 @@ from abc import ABC, abstractmethod
 # interface pour toutes les motorisations
 class Motorisation(ABC):
 
+    @property
     @abstractmethod
-    def get_type(self):
+    def type_motorisation(self):
         pass
 
     @abstractmethod

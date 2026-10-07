@@ -1,12 +1,16 @@
 from projet_dev_avance.voitures.repositories import MariaDBRepository
-from projet_dev_avance.voitures.services import CatalogueService, VoitureFactory
+from projet_dev_avance.voitures.services import CatalogueService, MotorisationService, VehiculeService, VoitureFactory
 from projet_dev_avance.voitures.cli.menu import lancer_menu
 
 
 def main():
     repository = MariaDBRepository()
-    service = CatalogueService(repository)
-    factory = VoitureFactory()
+
+    # injection de dependances : chaque service recoit ce dont il a besoin
+    motorisation_service = MotorisationService(repository)
+    vehicule_service = VehiculeService(repository)
+    service = CatalogueService(vehicule_service, motorisation_service)
+    factory = VoitureFactory(motorisation_service)
 
     # on remplit la base seulement si elle est vide (sinon doublons)
     if not service.lister_voitures():

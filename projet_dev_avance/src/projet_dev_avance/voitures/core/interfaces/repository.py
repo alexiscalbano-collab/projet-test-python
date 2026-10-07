@@ -19,3 +19,7 @@ class Repository(ABC):
     @abstractmethod
     def supprimer(self, modele):
         pass
+
+    @abstractmethod
+    def lister_motorisations(self):
+        pass

@@ -1,8 +1,11 @@
+from functools import wraps
+
 from projet_dev_avance.voitures.core.exceptions import DonneeInvalide
 
 
 # decorateur pour logguer : affiche quand une fonction commence et finit
 def logguer(fonction):
+    @wraps(fonction)
     def wrapper(*args, **kwargs):
         print("[LOG] debut de", fonction.__name__)
         resultat = fonction(*args, **kwargs)
@@ -13,6 +16,7 @@ def logguer(fonction):
 
 # decorateur pour valider : refuse les textes vides et les nombres negatifs
 def valider(fonction):
+    @wraps(fonction)
     def wrapper(*args, **kwargs):
         for valeur in args:
             if type(valeur) == str and valeur == "":

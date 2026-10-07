@@ -1,6 +1,7 @@
 from projet_dev_avance.voitures.core.interfaces import Repository
 from projet_dev_avance.voitures.core.exceptions import VoitureIntrouvable, VoitureDejaPresente
 
+
 class MemoireRepository(Repository):
 
     def __init__(self):
@@ -24,3 +25,6 @@ class MemoireRepository(Repository):
     def supprimer(self, modele):
         voiture = self.chercher(modele)
         self.voitures.remove(voiture)
+
+    def lister_motorisations(self):
+        return [v.motorisation for v in self.voitures]

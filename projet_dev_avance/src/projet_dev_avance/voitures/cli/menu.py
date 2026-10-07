@@ -9,6 +9,7 @@ def lancer_menu(service, factory):
         print("2 - ajouter une voiture")
         print("3 - chercher une voiture")
         print("4 - supprimer une voiture")
+        print("5 - voir les motorisations")
         print("0 - quitter")
         choix = input("ton choix : ")
 
@@ -52,6 +53,10 @@ def lancer_menu(service, factory):
                 modele = input("quel modele : ")
                 service.supprimer_voiture(modele)
                 print("voiture supprimee")
+
+            elif choix == "5":
+                for m in service.lister_motorisations():
+                    print(m.afficher())
 
         except CatalogueErreur as e:
             print("erreur :", e)
