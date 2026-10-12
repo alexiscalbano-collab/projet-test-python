@@ -1,23 +1,36 @@
+"""Stockage des voitures dans MariaDB."""
+
 import pymysql
 
 from projet_dev_avance.voitures.core.config import DB_CONFIG
 from projet_dev_avance.voitures.core.interfaces import Repository
-from projet_dev_avance.voitures.core.exceptions import VoitureIntrouvable, VoitureDejaPresente
-from projet_dev_avance.voitures.models.motorisations import Thermique, Electrique, Hybride
+from projet_dev_avance.voitures.core.exceptions import (
+    VoitureIntrouvable,
+    VoitureDejaPresente,
+)
+from projet_dev_avance.voitures.models.motorisations import (
+    Thermique,
+    Electrique,
+    Hybride,
+)
 from projet_dev_avance.voitures.models.vehicules.voiture import Voiture
 
 # 2 tables : chaque vehicule pointe vers sa motorisation (motorisation_id)
 SELECT_VEHICULES = """
-    SELECT v.marque, v.modele, v.annee, v.kilometrage, v.volume_coffre, v.categorie,
-           m.type, m.reservoir, m.consommation_thermique, m.batterie, m.consommation_electrique
+    SELECT v.marque, v.modele, v.annee, v.kilometrage,
+           v.volume_coffre, v.categorie,
+           m.type, m.reservoir, m.consommation_thermique,
+           m.batterie, m.consommation_electrique
     FROM vehicules v
     JOIN motorisations m ON m.id = v.motorisation_id
 """
 
 
 class MariaDBRepository(Repository):
+    """Repository qui enregistre les voitures dans MariaDB."""
 
     def __init__(self, config=None):
+        """Garde la config de connexion et cree les tables."""
         self.config = config or DB_CONFIG
         self.creer_tables()
 
@@ -25,6 +38,7 @@ class MariaDBRepository(Repository):
         return pymysql.connect(**self.config)
 
     def creer_tables(self):
+        """Cree les tables si elles n'existent pas."""
         conn = self._connexion()
         try:
             with conn.cursor() as cur:
@@ -48,7 +62,8 @@ class MariaDBRepository(Repository):
                         volume_coffre INT,
                         categorie VARCHAR(30),
                         motorisation_id INT NOT NULL,
-                        FOREIGN KEY (motorisation_id) REFERENCES motorisations(id)
+                        FOREIGN KEY (motorisation_id)
+                            REFERENCES motorisations(id)
                     )
                 """)
             conn.commit()
@@ -56,33 +71,50 @@ class MariaDBRepository(Repository):
             conn.close()
 
     def ajouter(self, voiture):
+        """Ajoute une voiture."""
         m = voiture.motorisation
         conn = self._connexion()
         try:
             with conn.cursor() as cur:
-                cur.execute("SELECT id FROM vehicules WHERE modele = %s", (voiture.modele,))
+                cur.execute(
+                    "SELECT id FROM vehicules WHERE modele = %s",
+                    (voiture.modele,),
+                )
                 if cur.fetchone():
-                    raise VoitureDejaPresente("la voiture " + voiture.modele + " existe deja")
+                    raise VoitureDejaPresente(
+                        "la voiture " + voiture.modele + " existe deja"
+                    )
 
                 # 1) on enregistre le moteur
                 cur.execute(
-                    """INSERT INTO motorisations (type, reservoir, consommation_thermique, batterie, consommation_electrique)
+                    """INSERT INTO motorisations (type, reservoir,
+                           consommation_thermique, batterie,
+                           consommation_electrique)
                        VALUES (%s, %s, %s, %s, %s)""",
                     (
                         m.type_motorisation,
-                        getattr(m, "reservoir", None), getattr(m, "consommation_thermique", None),
-                        getattr(m, "batterie", None), getattr(m, "consommation_electrique", None),
+                        getattr(m, "reservoir", None),
+                        getattr(m, "consommation_thermique", None),
+                        getattr(m, "batterie", None),
+                        getattr(m, "consommation_electrique", None),
                     ),
                 )
                 motorisation_id = cur.lastrowid
 
                 # 2) on enregistre le vehicule relie a ce moteur
                 cur.execute(
-                    """INSERT INTO vehicules (marque, modele, annee, kilometrage, volume_coffre, categorie, motorisation_id)
+                    """INSERT INTO vehicules (marque, modele, annee,
+                           kilometrage, volume_coffre, categorie,
+                           motorisation_id)
                        VALUES (%s, %s, %s, %s, %s, %s, %s)""",
                     (
-                        voiture.marque, voiture.modele, voiture.annee, voiture.kilometrage,
-                        voiture.volume_coffre, voiture.categorie, motorisation_id,
+                        voiture.marque,
+                        voiture.modele,
+                        voiture.annee,
+                        voiture.kilometrage,
+                        voiture.volume_coffre,
+                        voiture.categorie,
+                        motorisation_id,
                     ),
                 )
             conn.commit()
@@ -93,6 +125,7 @@ class MariaDBRepository(Repository):
             conn.close()
 
     def lister(self):
+        """Renvoie toutes les voitures."""
         conn = self._connexion()
         try:
             with conn.cursor() as cur:
@@ -103,10 +136,13 @@ class MariaDBRepository(Repository):
         return [self._vers_voiture(ligne) for ligne in lignes]
 
     def chercher(self, modele):
+        """Renvoie la voiture qui a ce modele."""
         conn = self._connexion()
         try:
             with conn.cursor() as cur:
-                cur.execute(SELECT_VEHICULES + " WHERE v.modele = %s", (modele,))
+                cur.execute(
+                    SELECT_VEHICULES + " WHERE v.modele = %s", (modele,)
+                )
                 ligne = cur.fetchone()
         finally:
             conn.close()
@@ -115,16 +151,26 @@ class MariaDBRepository(Repository):
         return self._vers_voiture(ligne)
 
     def supprimer(self, modele):
+        """Supprime la voiture qui a ce modele."""
         conn = self._connexion()
         try:
             with conn.cursor() as cur:
-                cur.execute("SELECT motorisation_id FROM vehicules WHERE modele = %s", (modele,))
+                cur.execute(
+                    "SELECT motorisation_id FROM vehicules WHERE modele = %s",
+                    (modele,),
+                )
                 ligne = cur.fetchone()
                 if ligne is None:
-                    raise VoitureIntrouvable("la voiture " + modele + " n'existe pas")
+                    raise VoitureIntrouvable(
+                        "la voiture " + modele + " n'existe pas"
+                    )
                 # on supprime le vehicule puis son moteur
-                cur.execute("DELETE FROM vehicules WHERE modele = %s", (modele,))
-                cur.execute("DELETE FROM motorisations WHERE id = %s", (ligne[0],))
+                cur.execute(
+                    "DELETE FROM vehicules WHERE modele = %s", (modele,)
+                )
+                cur.execute(
+                    "DELETE FROM motorisations WHERE id = %s", (ligne[0],)
+                )
             conn.commit()
         except Exception:
             conn.rollback()
@@ -133,11 +179,13 @@ class MariaDBRepository(Repository):
             conn.close()
 
     def lister_motorisations(self):
+        """Renvoie tous les moteurs."""
         conn = self._connexion()
         try:
             with conn.cursor() as cur:
                 cur.execute(
-                    "SELECT type, reservoir, consommation_thermique, batterie, consommation_electrique FROM motorisations"
+                    "SELECT type, reservoir, consommation_thermique, "
+                    "batterie, consommation_electrique FROM motorisations"
                 )
                 lignes = cur.fetchall()
         finally:
@@ -145,6 +193,7 @@ class MariaDBRepository(Repository):
         return [self._vers_motorisation(*ligne) for ligne in lignes]
 
     def vider(self):
+        """Supprime toutes les voitures et tous les moteurs."""
         conn = self._connexion()
         try:
             with conn.cursor() as cur:
@@ -154,7 +203,9 @@ class MariaDBRepository(Repository):
         finally:
             conn.close()
 
-    def _vers_motorisation(self, type_m, reservoir, conso_th, batterie, conso_el):
+    def _vers_motorisation(
+        self, type_m, reservoir, conso_th, batterie, conso_el
+    ):
         if type_m == "thermique":
             return Thermique(reservoir, conso_th)
         if type_m == "electrique":
@@ -163,4 +214,12 @@ class MariaDBRepository(Repository):
 
     def _vers_voiture(self, ligne):
         marque, modele, annee, km, coffre, categorie, *moteur = ligne
-        return Voiture(marque, modele, annee, km, self._vers_motorisation(*moteur), coffre, categorie)
+        return Voiture(
+            marque,
+            modele,
+            annee,
+            km,
+            self._vers_motorisation(*moteur),
+            coffre,
+            categorie,
+        )

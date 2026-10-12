@@ -1,1 +1,3 @@
+"""Gestion des films."""
+
 from .movies import creer_film, add, chercher_film, supprimer_film, films

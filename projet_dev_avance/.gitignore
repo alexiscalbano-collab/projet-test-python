@@ -5,3 +5,10 @@ __pycache__/
 .DS_Store
 *.db
 .pytest_cache/
+
+# docs generees et rapports
+build/
+site/
+.coverage
+htmlcov/
+.mypy_cache/

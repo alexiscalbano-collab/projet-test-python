@@ -1,0 +1,1 @@
+"""Petites fonctions utilitaires."""

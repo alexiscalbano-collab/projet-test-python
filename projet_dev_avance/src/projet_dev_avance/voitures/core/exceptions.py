@@ -1,21 +1,23 @@
+"""Erreurs propres au catalogue."""
+
 # les erreurs de notre projet
 
 
 class CatalogueErreur(Exception):
-    pass
+    """Erreur de base du catalogue."""
 
 
 class VoitureIntrouvable(CatalogueErreur):
-    pass
+    """La voiture demandee n'existe pas."""
 
 
 class VoitureDejaPresente(CatalogueErreur):
-    pass
+    """La voiture existe deja dans le catalogue."""
 
 
 class DonneeInvalide(CatalogueErreur):
-    pass
+    """Une donnee n'est pas valide."""
 
 
 class MotorisationInconnue(CatalogueErreur):
-    pass
+    """Le type de moteur n'existe pas."""
